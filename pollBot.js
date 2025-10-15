@@ -1,8 +1,8 @@
 const { Telegraf, Markup } = require("telegraf");
 const moment = require("moment"); // библиотека для работы с датами
 moment.locale("ru");
-const bot = new Telegraf("8016112503:AAFJEUKvE-LYtmd4AJCw_YgbtfyRqdbRvbU");
 const TOKEN = process.env.BOT_TOKEN;
+const bot = new Telegraf(TOKEN);
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const selectedDates = new Set();
 const userData = {};
