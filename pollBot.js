@@ -190,6 +190,7 @@ bot.on("text", async (ctx) => {
 
   await ctx.telegram.sendPoll(GROUP_CHAT_ID, title, options, {
     is_anonymous: false,
+    allows_multiple_answers: true,
   });
 
   await ctx.reply(`✅ Опрос "${title}" создан!`);
