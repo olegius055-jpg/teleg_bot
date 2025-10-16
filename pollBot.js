@@ -196,7 +196,7 @@ bot.on("text", async (ctx) => {
     allows_multiple_answers: true,
   });
 
-/* const pollId = pollMessage.message_id;
+ const pollId = pollMessage.message_id;
 
   await ctx.reply('Выберите действие:', {
   reply_to_message_id: pollMessage.message_id, // 👈 привязываем к опросу визуально
@@ -209,7 +209,7 @@ bot.on("text", async (ctx) => {
     ],
   },
 });
-  await ctx.reply(`✅ Опрос "${title}" создан!`); */
+  await ctx.reply(`✅ Опрос "${title}" создан!`); 
 
   // очищаем данные
   delete userData[id];
