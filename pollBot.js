@@ -8,7 +8,6 @@ const selectedDates = new Set();
 const userData = {};
 const activePolls = new Map();
 
-
 bot.command("getid", (ctx) => {
   ctx.reply(`ID этого чата: ${ctx.chat.id}`);
 });
@@ -40,7 +39,7 @@ bot.command("reset", (ctx) => {
 
 bot.command("help", (ctx) => {
   ctx.reply(
-    "🧭 Команды:\n/start — начать работу\n/calendar — выбрать даты\n/reset — сбросить даты"
+    "🧭 Команды:\n/start — запустить бота для выбора дат \n/reset — сбросить даты"
   );
 });
 
@@ -67,7 +66,7 @@ function generateCalendar(year, month, selected = new Set()) {
 
   // 4️⃣ Основные дни месяца
   for (let i = 1; i <= end.date(); i++) {
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().format("YYYY-MM-DD");
     const day = moment([year, month, i]);
     const dateStr = day.format("YYYY-MM-DD");
     const label = selected.has(dateStr)
@@ -190,80 +189,39 @@ bot.on("text", async (ctx) => {
     .sort()
     .map((d) => moment(d).format("D MMMM (ddd)"));
 
-/*  await ctx.telegram.sendPoll(GROUP_CHAT_ID, title, options, {
+  /*  await ctx.telegram.sendPoll(GROUP_CHAT_ID, title, options, {
     is_anonymous: false,
     allows_multiple_answers: true,
   });
 */
-await ctx.replyWithPoll(title, options, {
-  is_anonymous: false,
-  allows_multiple_answers: true,
-});
+  await ctx.replyWithPoll(title, options, {
+    is_anonymous: false,
+    allows_multiple_answers: true,
+  });
 
-const pollId = pollMessage.message_id;
+  const pollId = pollMessage.message_id;
 
-await ctx.reply('Действия с опросом:', {
-  reply_markup: {
-    inline_keyboard: [
-      [
-        { text: '📊 Подбить результат', callback_data: `result_${pollId}` },
-        { text: '❌ Отменить опрос', callback_data: `cancel_${pollId}` },
+  await ctx.reply("Действия с опросом:", {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "📊 Подбить результат", callback_data: `result_${pollId}` },
+          { text: "❌ Отменить опрос", callback_data: `cancel_${pollId}` },
+        ],
       ],
-    ],
-  },
-});
+    },
+  });
 
   await ctx.reply(`✅ Опрос "${title}" создан!`);
-  
+
   // очищаем данные
   delete userData[id];
 });
 
-
-
-//Обработчики кнопок
-
-bot.action(/result_(\d+)_(\d+)/, async (ctx) => {
-  const [_, userId, pollId] = ctx.match;
-  const polls = activePolls.get(Number(userId));
-  const pollData = polls?.find(p => p.pollId == pollId);
-  if (!pollData) return ctx.answerCbQuery('⚠️ Этот опрос уже закрыт или не найден.', { show_alert: true });
-
-  // Получаем сам опрос из Telegram
-  const msg = await ctx.telegram.getChat(pollData.chatId);
-  const poll = ctx.update.callback_query.message.reply_to_message?.poll;
-
-  if (!poll) {
-    await ctx.reply('⚠️ Не удалось получить результаты.');
-    return;
-  }
-
-  const results = poll.options.map(o => `${o.text}: ${o.voter_count}`).join('\n');
-  await ctx.reply(`📊 *Результаты опроса "${pollData.title}":*\n${results}`, { parse_mode: 'Markdown' });
-  ctx.answerCbQuery();
-});
-
-bot.action(/cancel_(\d+)_(\d+)/, async (ctx) => {
-  const [_, userId, pollId] = ctx.match;
-  const polls = activePolls.get(Number(userId));
-  if (!polls) return ctx.answerCbQuery('⚠️ Опрос не найден.', { show_alert: true });
-
-  // Удаляем опрос из активных
-  const index = polls.findIndex(p => p.pollId == pollId);
-  if (index !== -1) polls.splice(index, 1);
-  if (polls.length === 0) activePolls.delete(Number(userId));
-
-  try {
-    await ctx.deleteMessage(); // удаляем сообщение с кнопками
-    await ctx.reply('❌ Опрос отменён.');
-  } catch (err) {
-    console.error(err);
-    ctx.reply('⚠️ Ошибка при отмене опроса.');
-  }
-});
-
-const http = require('http');
-http.createServer((req, res) => res.end('Bot is running')).listen(process.env.PORT || 10000);
+const http = require("http");
+http
+  .createServer((req, res) => res.end("Bot is running"))
+  .listen(process.env.PORT || 10000);
 
 // === Запуск ===
 bot.launch();
