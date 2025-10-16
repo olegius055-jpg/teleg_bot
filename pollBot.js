@@ -100,7 +100,6 @@ function generateCalendar(year, month, selected = new Set()) {
       Markup.button.callback("📊 Создать опрос", "create_poll"),
     ]);
   }
-
   return Markup.inlineKeyboard([...weeks, ...controls]);
 }
 
@@ -201,17 +200,17 @@ bot.on("text", async (ctx) => {
 
   const pollId = pollMessage.message_id;
 
-  await ctx.reply("Действия с опросом:", {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "📊 Подбить результат", callback_data: `result_${pollId}` },
-          { text: "❌ Отменить опрос", callback_data: `cancel_${pollId}` },
-        ],
+  await ctx.reply('Выберите действие:', {
+  reply_to_message_id: pollMessage.message_id, // 👈 привязываем к опросу визуально
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { text: '📊 Подбить результат', callback_data: `result_${pollMessage.message_id}` },
+        { text: '❌ Отменить опрос', callback_data: `cancel_${pollMessage.message_id}` },
       ],
-    },
-  });
-
+    ],
+  },
+});
   await ctx.reply(`✅ Опрос "${title}" создан!`);
 
   // очищаем данные
