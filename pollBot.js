@@ -6,6 +6,8 @@ const bot = new Telegraf(TOKEN);
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const selectedDates = new Set();
 const userData = {};
+const activePolls = new Map();
+
 
 bot.command("getid", (ctx) => {
   ctx.reply(`ID этого чата: ${ctx.chat.id}`);
@@ -198,11 +200,66 @@ await ctx.replyWithPoll(title, options, {
   allows_multiple_answers: true,
 });
 
+const pollId = pollMessage.message_id;
+
+await ctx.reply('Действия с опросом:', {
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { text: '📊 Подбить результат', callback_data: `result_${pollId}` },
+        { text: '❌ Отменить опрос', callback_data: `cancel_${pollId}` },
+      ],
+    ],
+  },
+});
 
   await ctx.reply(`✅ Опрос "${title}" создан!`);
-
+  
   // очищаем данные
   delete userData[id];
+});
+
+
+
+//Обработчики кнопок
+
+bot.action(/result_(\d+)_(\d+)/, async (ctx) => {
+  const [_, userId, pollId] = ctx.match;
+  const polls = activePolls.get(Number(userId));
+  const pollData = polls?.find(p => p.pollId == pollId);
+  if (!pollData) return ctx.answerCbQuery('⚠️ Этот опрос уже закрыт или не найден.', { show_alert: true });
+
+  // Получаем сам опрос из Telegram
+  const msg = await ctx.telegram.getChat(pollData.chatId);
+  const poll = ctx.update.callback_query.message.reply_to_message?.poll;
+
+  if (!poll) {
+    await ctx.reply('⚠️ Не удалось получить результаты.');
+    return;
+  }
+
+  const results = poll.options.map(o => `${o.text}: ${o.voter_count}`).join('\n');
+  await ctx.reply(`📊 *Результаты опроса "${pollData.title}":*\n${results}`, { parse_mode: 'Markdown' });
+  ctx.answerCbQuery();
+});
+
+bot.action(/cancel_(\d+)_(\d+)/, async (ctx) => {
+  const [_, userId, pollId] = ctx.match;
+  const polls = activePolls.get(Number(userId));
+  if (!polls) return ctx.answerCbQuery('⚠️ Опрос не найден.', { show_alert: true });
+
+  // Удаляем опрос из активных
+  const index = polls.findIndex(p => p.pollId == pollId);
+  if (index !== -1) polls.splice(index, 1);
+  if (polls.length === 0) activePolls.delete(Number(userId));
+
+  try {
+    await ctx.deleteMessage(); // удаляем сообщение с кнопками
+    await ctx.reply('❌ Опрос отменён.');
+  } catch (err) {
+    console.error(err);
+    ctx.reply('⚠️ Ошибка при отмене опроса.');
+  }
 });
 
 const http = require('http');
